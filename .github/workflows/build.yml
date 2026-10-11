@@ -1,10 +1,14 @@
 name: Build Logic 2
 
 on:
+  workflow_dispatch:
   push:
     branches: [master]
   pull_request:
     branches: [master]
+
+permissions:
+  contents: read
 
 jobs:
   build:

@@ -3,6 +3,7 @@
 
 #include <Analyzer.h>
 #include <vector>
+#include <mutex>
 #include "ISO7816AnalyzerResults.h"
 #include "ISO7816SimulationDataGenerator.h"
 #include "ISO7816Context.h"
@@ -49,6 +50,7 @@ class ANALYZER_EXPORT ISO7816Analyzer : public Analyzer2
     U32 mSampleRateHz;
     ISO7816Context* mContext;
     std::vector<ISO7816Node*> mNodes;
+    std::mutex mNodesMutex;
 };
 
 extern "C" ANALYZER_EXPORT const char* __cdecl GetAnalyzerName();

@@ -26,15 +26,22 @@ void ISO7816Analyzer::newFrame( ISO7816Node* node )
     }
 #endif
 
-    // Add node
-    mNodes.push_back( node );
-
     // we have a byte to save.
     Frame frame;
+    frame.mData1 = 0;
+    frame.mData2 = 0;
+    frame.mFlags = 0;
+    frame.mType = 0;
     frame.mStartingSampleInclusive = node->GetStartSample();
     frame.mEndingSampleInclusive = node->GetEndSample();
 
-    node->SetNodeId( mResults->AddFrame( frame ) );
+    {
+        // Readers must not see a partially published node or a reallocating vector.
+        // Keep AddFrame inside the lock: it can expose the ID to result callbacks.
+        std::lock_guard<std::mutex> lock( mNodesMutex );
+        node->SetNodeId( mResults->AddFrame( frame ) );
+        mNodes.push_back( node );
+    }
 
 #ifdef LOGIC2
     FrameV2 framev2;
@@ -57,6 +64,7 @@ ISO7816Context* ISO7816Analyzer::GetContext( void )
 
 ISO7816Node* ISO7816Analyzer::GetNodeByFrameId( U64 frameId )
 {
+    std::lock_guard<std::mutex> lock( mNodesMutex );
     for( auto const& node : mNodes )
         if( node->GetNodeId() == frameId )
             return node;
@@ -77,7 +85,10 @@ ISO7816Analyzer::~ISO7816Analyzer()
 void ISO7816Analyzer::Setup()
 {
     mSampleRateHz = GetSampleRate();
-    mNodes.clear();
+    {
+        std::lock_guard<std::mutex> lock( mNodesMutex );
+        mNodes.clear();
+    }
 
     if( mSettings->mChannelVCC != UNDEFINED_CHANNEL )
         mVCC = GetAnalyzerChannelData( mSettings->mChannelVCC );

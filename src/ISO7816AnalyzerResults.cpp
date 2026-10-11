@@ -19,6 +19,8 @@ void ISO7816AnalyzerResults::GenerateBubbleText( U64 frame_index, Channel& chann
 {
     ClearResultStrings();
     ISO7816Node* node = mAnalyzer->GetNodeByFrameId( frame_index );
+    if( node == NULL )
+        return;
 
     if( channel == mSettings->mChannelVCC )
     {
@@ -123,6 +125,8 @@ void ISO7816AnalyzerResults::GenerateFrameTabularText( U64 frame_index, DisplayB
 #ifdef SUPPORTS_PROTOCOL_SEARCH
     ISO7816Node* node = mAnalyzer->GetNodeByFrameId( frame_index );
     ClearTabularText();
+    if( node == NULL )
+        return;
 
     if( node->GetLevel() == nodeLevel_char )
     {
